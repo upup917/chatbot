@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1></h1>
+        <a href="/logout" class="logout-btn">ออกจากระบบ</a>
+    </div>
+
+    <div class="navbar">
+        <a href="/" class="<%= !activeTab || activeTab === 'question' ? 'active' : '' %>">คำถาม</a>
+        <a href="/youtubelink" class="<%= activeTab === 'youtubelink' ? 'active' : '' %>">ลิงก์ YouTube</a>
+    </div>
+
+    <div class="container">
+        <% if (activeTab === 'question' || !activeTab) { %>
+            <h2>แก้ไขคำตอบ</h2>
+            <form action="/filter" method="POST" class="filter-form">
+                <label for="type-select">เลือกประเภท:</label>
+                <select name="type" id="type-select" onchange="this.form.submit()">
+                    <option value="" <%= selectedType === null ? 'selected' : '' %>>ทั้งหมด</option>
+                    <% types.forEach(type => { %>
+                        <option value="<%= type.type %>" <%= selectedType === type.type ? 'selected' : '' %>><%= type.type %></option>
+                    <% }); %>
+                </select>
+            </form>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Question</th>
+                        <th>Answer</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% questions.forEach(q => { %>
+                        <tr>
+                            <td><%= q.type %></td>
+                            <td><%= q.question %></td>
+                            <td>
+                                <form action="/update" method="POST" class="update-form">
+                                    <input type="hidden" name="question" value="<%= q.question %>">
+                                    <input type="hidden" name="type" value="<%= q.type %>">
+                                    <input type="text" name="answer" value="<%= q.answer %>" class="editable-answer">
+                            </td>
+                            <td>
+                                    <button type="submit">บันทึก</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } else if (activeTab === 'youtubelink') { %>
+            <h2>จัดการลิงก์ YouTube</h2>
+            <% if (youtubelinks.length < 5) { %>
+                <form action="/youtubelink/create" method="POST" class="create-form">
+                    <input type="text" name="link" placeholder="ป้อนลิงก์ YouTube" required>
+                    <button type="submit">เพิ่มลิงก์</button>
+                </form>
+            <% } else { %>
+                <p>ถึงขีดจำกัด 5 ลิงก์แล้ว</p>
+            <% } %>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ลิงก์ YouTube</th>
+                        <th>การกระทำ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% youtubelinks.forEach(link => { %>
+                        <tr>
+                            <td>
+                                <form action="/youtubelink/update/<%= link.id %>" method="POST" class="update-form">
+                                    <input type="text" name="link" value="<%= link.link %>" required>
+                                    <button type="submit">บันทึก</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form action="/youtubelink/delete/<%= link.id %>" method="POST">
+                                    <button type="submit">ลบ</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+</body>
+</html>
