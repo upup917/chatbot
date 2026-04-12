@@ -1,99 +1,630 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LINE Chatbot Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background: #f5f5f3;
+            min-height: 100vh;
+            color: #1a1a1a;
+        }
+
+        /* ===== HEADER ===== */
+        .db-header {
+            background: #ffffff;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            padding: 0 2rem;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .db-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .db-logo-icon {
+            width: 28px;
+            height: 28px;
+            background: #06C755;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .db-logo-icon svg { width: 16px; height: 16px; }
+
+        .db-logo-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a1a1a;
+            letter-spacing: -0.01em;
+        }
+
+        .db-header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .db-user {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .db-user strong {
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+
+        .db-logout {
+            font-size: 12px;
+            padding: 5px 12px;
+            border: 0.5px solid rgba(0,0,0,0.2);
+            border-radius: 8px;
+            color: #555;
+            background: transparent;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.15s;
+            display: inline-block;
+        }
+
+        .db-logout:hover { background: #f0f0ee; }
+
+        /* ===== NAV TABS ===== */
+        .db-nav {
+            background: #ffffff;
+            border-bottom: 0.5px solid rgba(0,0,0,0.1);
+            padding: 0 2rem;
+            display: flex;
+        }
+
+        .db-nav a {
+            font-size: 13px;
+            font-weight: 500;
+            color: #888;
+            padding: 13px 16px;
+            border-bottom: 2px solid transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s, border-color 0.15s;
+        }
+
+        .db-nav a:hover { color: #1a1a1a; }
+
+        .db-nav a.active {
+            color: #1a1a1a;
+            border-bottom-color: #06C755;
+        }
+
+        /* ===== BODY ===== */
+        .db-body {
+            padding: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* ===== ERROR MESSAGE ===== */
+        .error-message {
+            background: #fff0f0;
+            border: 0.5px solid #fca5a5;
+            color: #b91c1c;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .db-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .db-section-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        /* ===== FILTER ===== */
+        .db-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .db-filter-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .db-filter-select {
+            font-size: 12px;
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            padding: 5px 10px;
+            border: 0.5px solid rgba(0,0,0,0.2);
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1a1a1a;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .db-filter-select:focus {
+            border-color: #06C755;
+            box-shadow: 0 0 0 2px rgba(6,199,85,0.15);
+        }
+
+        /* ===== CARD ===== */
+        .db-card {
+            background: #ffffff;
+            border: 0.5px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* ===== TABLE ===== */
+        .db-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .db-table thead tr {
+            border-bottom: 0.5px solid rgba(0,0,0,0.08);
+        }
+
+        .db-table th {
+            text-align: left;
+            font-size: 11px;
+            font-weight: 500;
+            color: #aaa;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 10px 16px;
+            background: #fafaf9;
+        }
+
+        .db-table td {
+            padding: 13px 16px;
+            color: #1a1a1a;
+            vertical-align: middle;
+            border-bottom: 0.5px solid rgba(0,0,0,0.07);
+        }
+
+        .db-table tbody tr:last-child td { border-bottom: none; }
+        .db-table tbody tr:hover td { background: #fafaf9; }
+
+        /* ===== BADGES ===== */
+        .db-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 11px;
+            border-radius: 100px;
+            white-space: nowrap;
+        }
+
+        .db-badge-green  { background: #d1f5e0; color: #0a5c31; }
+        .db-badge-blue   { background: #daeafe; color: #1046a0; }
+        .db-badge-amber  { background: #fde9bb; color: #7a4108; }
+        .db-badge-red    { background: #fdd9d9; color: #9b1c1c; }
+        .db-badge-purple { background: #ede9fe; color: #5b21b6; }
+        .db-badge-teal   { background: #ccfbf1; color: #0f5e53; }
+        .db-badge-pink   { background: #fce7f3; color: #9d174d; }
+        .db-badge-gray   { background: #e8e8e6; color: #444; }
+
+        /* Auto-assign colors by type keyword */
+
+        /* ===== ANSWER TEXTAREA ===== */
+        .db-answer-input {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 6px 10px;
+            border: 0.5px solid rgba(0,0,0,0.15);
+            border-radius: 8px;
+            background: #fafaf9;
+            color: #1a1a1a;
+            width: 100%;
+            outline: none;
+            resize: none;
+            overflow: hidden;
+            height: 32px;
+            line-height: 1.5;
+            display: block;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, height 0.2s;
+        }
+
+        .db-answer-input:focus {
+            border-color: #06C755;
+            box-shadow: 0 0 0 2px rgba(6,199,85,0.12);
+            background: #ffffff;
+            height: 96px;
+            overflow: auto;
+        }
+
+        /* ===== SAVE BUTTON ===== */
+        .db-save-btn {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border: 0.5px solid rgba(0,0,0,0.18);
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1a1a1a;
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .db-save-btn:hover {
+            background: #06C755;
+            border-color: #06C755;
+            color: #fff;
+        }
+
+        .db-save-btn:active { transform: scale(0.97); }
+
+        /* ===== DELETE BUTTON ===== */
+        .db-del-btn {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            font-size: 12px;
+            padding: 6px 12px;
+            border: 0.5px solid rgba(0,0,0,0.15);
+            border-radius: 8px;
+            background: transparent;
+            color: #888;
+            cursor: pointer;
+            transition: background 0.12s, border-color 0.12s, color 0.12s;
+            white-space: nowrap;
+        }
+
+        .db-del-btn:hover {
+            background: #fff0f0;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
+        /* ===== YOUTUBE ADD FORM ===== */
+        .db-add-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 0 0 1.25rem;
+        }
+
+        .db-add-input {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            font-size: 13px;
+            padding: 7px 12px;
+            border: 0.5px solid rgba(0,0,0,0.18);
+            border-radius: 8px;
+            background: #ffffff;
+            color: #1a1a1a;
+            flex: 1;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .db-add-input:focus {
+            border-color: #06C755;
+            box-shadow: 0 0 0 2px rgba(6,199,85,0.12);
+        }
+
+        .db-add-btn {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #06C755;
+            color: #fff;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            white-space: nowrap;
+        }
+
+        .db-add-btn:hover { opacity: 0.85; }
+
+        .db-limit-note {
+            font-size: 12px;
+            color: #aaa;
+            padding: 0 0 1rem;
+        }
+
+        .db-yt-link {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            color: #185fa5;
+            word-break: break-all;
+        }
+
+        .db-yt-count {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* ===== YOUTUBE CARD GRID ===== */
+        .yt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .yt-card {
+            background: #ffffff;
+            border: 0.5px solid rgba(0,0,0,0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .yt-thumb-wrap {
+            display: block;
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #111;
+            overflow: hidden;
+            text-decoration: none;
+        }
+        .yt-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: opacity 0.2s;
+        }
+        .yt-thumb-wrap:hover .yt-thumb { opacity: 0.8; }
+        .yt-play-icon {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background: rgba(0,0,0,0.25);
+        }
+        .yt-thumb-wrap:hover .yt-play-icon { opacity: 1; }
+        .yt-card-body { padding: 12px; }
+        .yt-edit-form { display: flex; flex-direction: column; gap: 8px; }
+        .yt-link-input {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            padding: 6px 10px;
+            border: 0.5px solid rgba(0,0,0,0.15);
+            border-radius: 8px;
+            background: #fafaf9;
+            color: #1a1a1a;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+        .yt-link-input:focus {
+            border-color: #06C755;
+            box-shadow: 0 0 0 2px rgba(6,199,85,0.12);
+            background: #ffffff;
+        }
+        .yt-actions { display: flex; gap: 6px; }
+    </style>
 </head>
 <body>
-    <div class="header">
-        <h1></h1>
-        <a href="/logout" class="logout-btn">ออกจากระบบ</a>
-    </div>
 
-    <div class="navbar">
-        <a href="/" class="<%= !activeTab || activeTab === 'question' ? 'active' : '' %>">คำถาม</a>
-        <a href="/youtubelink" class="<%= activeTab === 'youtubelink' ? 'active' : '' %>">ลิงก์ YouTube</a>
-    </div>
+    <!-- HEADER -->
+    <header class="db-header">
+        <div class="db-logo">
+            <div class="db-logo-icon">
+                <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+            </div>
+            <span class="db-logo-text">LINE Chatbot Dashboard</span>
+        </div>
+        <div class="db-header-right">
+            <span class="db-user">สวัสดี, <strong><%= username %></strong></span>
+            <a href="/logout" class="db-logout">ออกจากระบบ</a>
+        </div>
+    </header>
 
-    <div class="container">
+    <!-- NAV TABS -->
+    <nav class="db-nav">
+        <a href="/" class="<%= !activeTab || activeTab === 'question' ? 'active' : '' %>">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            คำถาม
+        </a>
+        <a href="/youtubelink" class="<%= activeTab === 'youtubelink' ? 'active' : '' %>">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+                <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
+            </svg>
+            ลิงก์ YouTube
+        </a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="db-body">
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="error-message"><%= error %></div>
+        <% } %>
+
+        <!-- TAB: QUESTION -->
         <% if (activeTab === 'question' || !activeTab) { %>
-            <h2>แก้ไขคำตอบ</h2>
-            <form action="/filter" method="POST" class="filter-form">
-                <label for="type-select">เลือกประเภท:</label>
-                <select name="type" id="type-select" onchange="this.form.submit()">
-                    <option value="" <%= selectedType === null ? 'selected' : '' %>>ทั้งหมด</option>
-                    <% types.forEach(type => { %>
-                        <option value="<%= type.type %>" <%= selectedType === type.type ? 'selected' : '' %>><%= type.type %></option>
-                    <% }); %>
-                </select>
-            </form>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Question</th>
-                        <th>Answer</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% questions.forEach(q => { %>
+            <div class="db-section-header">
+                <span class="db-section-title">แก้ไขคำตอบ</span>
+                <form action="/filter" method="POST" class="db-filter-row">
+                    <span class="db-filter-label">ประเภท:</span>
+                    <select name="type" class="db-filter-select" onchange="this.form.submit()">
+                        <option value="" <%= selectedType === null ? 'selected' : '' %>>ทั้งหมด</option>
+                        <% types.forEach(type => { %>
+                            <option value="<%= type.type %>" <%= selectedType === type.type ? 'selected' : '' %>>
+                                <%= type.type %>
+                            </option>
+                        <% }); %>
+                    </select>
+                </form>
+            </div>
+
+            <div class="db-card">
+                <table class="db-table">
+                    <thead>
                         <tr>
-                            <td><%= q.type %></td>
-                            <td><%= q.question %></td>
-                            <td>
-                                <form action="/update" method="POST" class="update-form">
-                                    <input type="hidden" name="question" value="<%= q.question %>">
-                                    <input type="hidden" name="type" value="<%= q.type %>">
-                                    <input type="text" name="answer" value="<%= q.answer %>" class="editable-answer">
-                            </td>
-                            <td>
-                                    <button type="submit">บันทึก</button>
-                                </form>
-                            </td>
+                            <th style="width:110px;">ประเภท</th>
+                            <th>คำถาม</th>
+                            <th style="width:300px;">คำตอบ</th>
+                            <th style="width:90px;"></th>
                         </tr>
-                    <% }); %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% questions.forEach(q => { %>
+                            <tr>
+                        <td>
+                                    <%
+                                    const colorMap = {
+                                        'การรักษา': 'blue',
+                                        'ข้อมูลโรค': 'purple',
+                                        'ดูแลตนเอง': 'teal',
+                                        'ติดต่อเพิ่มเติม': 'amber',
+                                        'ทั่วไป': 'green',
+                                        'สินค้า': 'blue',
+                                        'บริการ': 'amber'
+                                    };
+                                    const badgeColor = colorMap[q.type] || 'gray';
+                                    %>
+                                    <span class="db-badge db-badge-<%= badgeColor %>"><%= q.type %></span>
+                                </td>
+                                <td><%= q.question %></td>
+                                <td>
+                                    <form action="/update" method="POST" style="display:flex; gap:8px; align-items:flex-start;">
+                                        <input type="hidden" name="question" value="<%= q.question %>">
+                                        <input type="hidden" name="type" value="<%= q.type %>">
+                                        <textarea
+                                            name="answer"
+                                            class="db-answer-input"
+                                            placeholder="กรอกคำตอบ..."
+                                        ><%= q.answer %></textarea>
+                                </td>
+                                <td>
+                                        <button type="submit" class="db-save-btn">บันทึก</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+
+        <!-- TAB: YOUTUBE LINKS -->
         <% } else if (activeTab === 'youtubelink') { %>
-            <h2>จัดการลิงก์ YouTube</h2>
+
+            <div class="db-section-header">
+                <span class="db-section-title">จัดการลิงก์ YouTube</span>
+                <span class="db-yt-count"><%= youtubelinks.length %> / 5 ลิงก์</span>
+            </div>
+
             <% if (youtubelinks.length < 5) { %>
-                <form action="/youtubelink/create" method="POST" class="create-form">
-                    <input type="text" name="link" placeholder="ป้อนลิงก์ YouTube" required>
-                    <button type="submit">เพิ่มลิงก์</button>
+                <form action="/youtubelink/create" method="POST" class="db-add-row">
+                    <input
+                        type="text"
+                        name="link"
+                        class="db-add-input"
+                        placeholder="วาง URL YouTube ที่นี่…"
+                        required
+                    >
+                    <button type="submit" class="db-add-btn">+ เพิ่มลิงก์</button>
                 </form>
             <% } else { %>
-                <p>ถึงขีดจำกัด 5 ลิงก์แล้ว</p>
+                <p class="db-limit-note">ถึงขีดจำกัด 5 ลิงก์แล้ว กรุณาลบลิงก์เก่าก่อนเพิ่มใหม่</p>
             <% } %>
 
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>ลิงก์ YouTube</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% youtubelinks.forEach(link => { %>
-                        <tr>
-                            <td>
-                                <form action="/youtubelink/update/<%= link.id %>" method="POST" class="update-form">
-                                    <input type="text" name="link" value="<%= link.link %>" required>
-                                    <button type="submit">บันทึก</button>
-                                </form>
-                            </td>
-                            <td>
-                                <form action="/youtubelink/delete/<%= link.id %>" method="POST">
-                                    <button type="submit">ลบ</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
+            <div class="yt-grid">
+                <% youtubelinks.forEach((link, index) => { %>
+                    <div class="yt-card">
+                        <a href="<%= link.link %>" target="_blank" class="yt-thumb-wrap">
+                            <img class="yt-thumb" src="" data-link="<%= link.link %>" alt="thumbnail">
+                            <div class="yt-play-icon">
+                                <svg viewBox="0 0 24 24" fill="white" width="28" height="28"><path d="M8 5v14l11-7z"/></svg>
+                            </div>
+                        </a>
+                        <div class="yt-card-body">
+                            <form action="/youtubelink/update/<%= link.id %>" method="POST" class="yt-edit-form">
+                                <input
+                                    type="text"
+                                    name="link"
+                                    value="<%= link.link %>"
+                                    class="yt-link-input"
+                                    placeholder="YouTube URL…"
+                                    required
+                                >
+                                <div class="yt-actions">
+                                    <button type="submit" class="db-save-btn">บันทึก</button>
+                            </form>
+                                    <form action="/youtubelink/delete/<%= link.id %>" method="POST">
+                                        <button type="submit" class="db-del-btn">ลบ</button>
+                                    </form>
+                                </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+
         <% } %>
-    </div>
+
+    </main>
+
+<script>
+function ytVideoId(url) {
+    try {
+        const u = new URL(url);
+        if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+        return u.searchParams.get('v') || '';
+    } catch(e) { return ''; }
+}
+document.querySelectorAll('.yt-thumb').forEach(img => {
+    const id = ytVideoId(img.dataset.link || '');
+    if (id) {
+        img.src = 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg';
+    } else {
+        img.parentElement.innerHTML = '<div style="width:100%;height:100%;background:#e8e8e6;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:12px;">ไม่พบรูปปก</div>';
+    }
+});
+</script>
 </body>
+<script>
+(function() {
+    const palette = ['blue','purple','teal','green','amber','red','pink','coral'];
+    const map = {};
+    let idx = 0;
+    document.querySelectorAll('.db-badge').forEach(el => {
+        const t = el.textContent.trim();
+        if (!(t in map)) map[t] = palette[idx++ % palette.length];
+        el.className = 'db-badge db-badge-' + map[t];
+    });
+})();
+</script>
 </html>

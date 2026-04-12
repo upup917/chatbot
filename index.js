@@ -1,5 +1,5 @@
 const express = require('express');
-const { Pool } = require('pg');
+const { createClient } = require('@supabase/supabase-js');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
@@ -7,14 +7,10 @@ const path = require('path');
 const app = express();
 const port = 3000;
 
-// ตั้งค่า Pool สำหรับเชื่อมต่อ PostgreSQL
-const pool = new Pool({
-    user: 'pocharapon.d',
-    host: 'eilapgsql.in.psu.ac.th',
-    database: 'linechatbot',
-    password: '91}m2T3X-;Pz',
-    port: 5432,
-});
+// ตั้งค่า Supabase Client
+const supabaseUrl = 'https://rrkuvmgwkgfwsdhwvrve.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya3V2bWd3a2dmd3NkaHd2cnZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzI4NzEsImV4cCI6MjA5MTU0ODg3MX0.RaTtdu4FW8D-J2yQWfx6x652zk8ShfK4o7EOiHkEu68';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ตั้งค่า Express
 app.set('view engine', 'ejs');
@@ -47,9 +43,14 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
-        const result = await pool.query('SELECT * FROM account WHERE username = $1 AND password = $2', [username, password]);
-        if (result.rows.length > 0) {
-            req.session.user = result.rows[0].username;
+        const { data, error } = await supabase
+            .from('account')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password);
+        if (error) throw error;
+        if (data && data.length > 0) {
+            req.session.user = data[0].username;
             res.redirect('/');
         } else {
             res.render('login', { error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
@@ -63,12 +64,22 @@ app.post('/login', async (req, res) => {
 // หน้าหลัก (ตาราง question)
 app.get('/', requireLogin, async (req, res) => {
     try {
-        const types = await pool.query('SELECT DISTINCT type FROM question ORDER BY type');
-        const questions = await pool.query('SELECT type, question, answer FROM question ORDER BY type, question');
+        const { data: types, error: typeError } = await supabase
+            .from('question')
+            .select('type')
+            .order('type', { ascending: true });
+        if (typeError) throw typeError;
+        const uniqueTypes = [...new Set(types.map(t => t.type))].map(type => ({ type }));
+        const { data: questions, error: questionError } = await supabase
+            .from('question')
+            .select('type, question, answer')
+            .order('type', { ascending: true })
+            .order('question', { ascending: true });
+        if (questionError) throw questionError;
         res.render('dashboard', {
             username: req.session.user,
-            types: types.rows,
-            questions: questions.rows,
+            types: uniqueTypes,
+            questions: questions,
             selectedType: null,
             activeTab: 'question',
             youtubelinks: []
@@ -83,17 +94,34 @@ app.get('/', requireLogin, async (req, res) => {
 app.post('/filter', requireLogin, async (req, res) => {
     const { type } = req.body;
     try {
-        const types = await pool.query('SELECT DISTINCT type FROM question ORDER BY type');
+        const { data: types, error: typeError } = await supabase
+            .from('question')
+            .select('type')
+            .order('type', { ascending: true });
+        if (typeError) throw typeError;
+        const uniqueTypes = [...new Set(types.map(t => t.type))].map(type => ({ type }));
         let questions;
         if (type) {
-            questions = await pool.query('SELECT type, question, answer FROM question WHERE type = $1 ORDER BY question', [type]);
+            const { data, error } = await supabase
+                .from('question')
+                .select('type, question, answer')
+                .eq('type', type)
+                .order('question', { ascending: true });
+            if (error) throw error;
+            questions = data;
         } else {
-            questions = await pool.query('SELECT type, question, answer FROM question ORDER BY type, question');
+            const { data, error } = await supabase
+                .from('question')
+                .select('type, question, answer')
+                .order('type', { ascending: true })
+                .order('question', { ascending: true });
+            if (error) throw error;
+            questions = data;
         }
         res.render('dashboard', {
             username: req.session.user,
-            types: types.rows,
-            questions: questions.rows,
+            types: uniqueTypes,
+            questions: questions,
             selectedType: type,
             activeTab: 'question',
             youtubelinks: []
@@ -108,7 +136,12 @@ app.post('/filter', requireLogin, async (req, res) => {
 app.post('/update', requireLogin, async (req, res) => {
     const { question, answer, type } = req.body;
     try {
-        await pool.query('UPDATE question SET answer = $1 WHERE question = $2 AND type = $3', [answer, question, type]);
+        const { error } = await supabase
+            .from('question')
+            .update({ answer })
+            .eq('question', question)
+            .eq('type', type);
+        if (error) throw error;
         res.redirect('/');
     } catch (err) {
         console.error(err);
@@ -119,14 +152,18 @@ app.post('/update', requireLogin, async (req, res) => {
 // หน้า YouTube Links
 app.get('/youtubelink', requireLogin, async (req, res) => {
     try {
-        const youtubelinks = await pool.query('SELECT id, link FROM youtubelink ORDER BY id');
+        const { data: youtubelinks, error } = await supabase
+            .from('youtubelink')
+            .select('id, link')
+            .order('id', { ascending: true });
+        if (error) throw error;
         res.render('dashboard', {
             username: req.session.user,
             types: [],
             questions: [],
             selectedType: null,
             activeTab: 'youtubelink',
-            youtubelinks: youtubelinks.rows
+            youtubelinks: youtubelinks
         });
     } catch (err) {
         console.error(err);
@@ -138,11 +175,17 @@ app.get('/youtubelink', requireLogin, async (req, res) => {
 app.post('/youtubelink/create', requireLogin, async (req, res) => {
     const { link } = req.body;
     try {
-        const count = await pool.query('SELECT COUNT(*) FROM youtubelink');
-        if (count.rows[0].count >= 5) {
+        const { count, error: countError } = await supabase
+            .from('youtubelink')
+            .select('id', { count: 'exact', head: true });
+        if (countError) throw countError;
+        if (count >= 5) {
             return res.redirect('/youtubelink');
         }
-        await pool.query('INSERT INTO youtubelink (link) VALUES ($1)', [link]);
+        const { error } = await supabase
+            .from('youtubelink')
+            .insert([{ link }]);
+        if (error) throw error;
         res.redirect('/youtubelink');
     } catch (err) {
         console.error(err);
@@ -155,7 +198,11 @@ app.post('/youtubelink/update/:id', requireLogin, async (req, res) => {
     const { id } = req.params;
     const { link } = req.body;
     try {
-        await pool.query('UPDATE youtubelink SET link = $1 WHERE id = $2', [link, id]);
+        const { error } = await supabase
+            .from('youtubelink')
+            .update({ link })
+            .eq('id', id);
+        if (error) throw error;
         res.redirect('/youtubelink');
     } catch (err) {
         console.error(err);
@@ -167,7 +214,11 @@ app.post('/youtubelink/update/:id', requireLogin, async (req, res) => {
 app.post('/youtubelink/delete/:id', requireLogin, async (req, res) => {
     const { id } = req.params;
     try {
-        await pool.query('DELETE FROM youtubelink WHERE id = $1', [id]);
+        const { error } = await supabase
+            .from('youtubelink')
+            .delete()
+            .eq('id', id);
+        if (error) throw error;
         res.redirect('/youtubelink');
     } catch (err) {
         console.error(err);
