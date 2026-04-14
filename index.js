@@ -233,6 +233,10 @@ app.get('/logout', (req, res) => {
 });
 
 // เริ่มต้น Server
-app.listen(port, () => {
-    console.log(`Server กำลังทำงานที่ http://localhost:${port}`);
-});
+if (process.env.VERCEL) {
+    module.exports = app;
+} else {
+    app.listen(port, () => {
+        console.log(`Server กำลังทำงานที่ http://localhost:${port}`);
+    });
+}
