@@ -8,8 +8,9 @@ const app = express();
 const port = 3000;
 
 // ตั้งค่า Supabase Client
-const supabaseUrl = 'https://rrkuvmgwkgfwsdhwvrve.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJya3V2bWd3a2dmd3NkaHd2cnZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NzI4NzEsImV4cCI6MjA5MTU0ODg3MX0.RaTtdu4FW8D-J2yQWfx6x652zk8ShfK4o7EOiHkEu68';
+require('dotenv').config();
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ตั้งค่า Express
